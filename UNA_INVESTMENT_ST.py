@@ -42,6 +42,7 @@ if mostrar_filtro_coluna:
         df.columns,
         default=None)
 
+
 ##########################################
                                                                                                     # .sort_values(ascending=True).values[rank * 6]
 col1, col2, col3, col4, col5 = st.columns(5)
