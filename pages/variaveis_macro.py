@@ -4,7 +4,7 @@ from plotly import graph_objects as go
 import time
 import numpy as np
 
-df = pd.read_excel('df_completo.xlsx')
+df = pd.read_excel('df_completo2.xlsx')
 
 
 colunas_pct = ['VOLATILIDADE', 'MÁXIMO DROW DOWN', 'RENTABILIDADE']
@@ -93,9 +93,11 @@ def destaque_valor_correlacao(val):
 
 
 
-exibir_matriz_corr_inteira = st.toggle('exibir matriz de correlação de tocas as ações entre si completa')
+exibir_matriz_corr_inteira = st.toggle('EXIBIR MATRIZ DE CORRELAÇÃO COMPLETA')
 if exibir_matriz_corr_inteira:
-    st.subheader('Matriz de correlação entre todas as ações')
+    st.subheader('Matriz de correlação entre todas as ações + dolar, ipca e selic')
+    st.caption('Clique na ação para ordenam em ações que mais correlacionam com ela ou menos correlacionam.')
+    st.caption('Clique no canto para voltar a disposição normal')
     st.dataframe(df_corr.corr().style.applymap(destaque_valor_correlacao))
 st.divider()
 

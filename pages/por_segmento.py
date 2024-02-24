@@ -11,7 +11,7 @@ st.set_page_config(
     )
 
 st.title('\t\t:rainbow[UNA INVESTMENT - DATA SCIENCE]')
-df = pd.read_excel('df_completo.xlsx')
+df = pd.read_excel('df_completo2.xlsx')
 
 st.markdown("# Análises por SEGMENTO")
 st.header('',divider='rainbow')
@@ -100,6 +100,9 @@ try:
 
 except:
     pass
+if st.checkbox('visualizar a tabela'):
+    df[df['SEGMENTO'] == segmento_escolhido][['DATA','PAPEL','NOME','PREÇO (R$)','SEGMENTO','RETORNOS_SIMPLES','RETORNOS_ACUMULADOS','SHARPE','RENTABILIDADE','VOLATILIDADE','MÁXIMO DROW DOWN', 'MÁXIMO DROW DOWN bruto', 'GANHO BRUTO R$', 'MÉDIA']] ################
+
 st.divider()
 st.subheader('DATAFRAMES', divider='rainbow')
 
@@ -123,5 +126,402 @@ if visualizar_tabela:
         # st.table(pd.DataFrame(df_agrupado[[information]]).pivot_table(values='MÉDIA', columns='SEGMENTO'))
         pass
 st.divider()
-st.header('GRÁFICOS',divider='rainbow')
 
+# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+######################################################################################################################################################
+st.header('RENTABILIDADE ACUMULADA MÊS A MÊS POR SETOR',divider='rainbow')
+st.subheader(f"RENTABILIDADE MÉDIA GERAL =  {df['RENTABILIDADE'].mean() * 100:.4f} %")
+st.caption('''''')
+
+df_perform_setores = df.groupby(['SEGMENTO','DATA'])['ACUM_RENTABILIDADE'].mean()
+todos_setores_econ = df_perform_setores.index.get_level_values('SEGMENTO').unique()
+todas_datas = df_perform_setores.index.get_level_values('DATA').unique()
+from dateutil.relativedelta import relativedelta
+import datetime
+data_1_antes = [data - relativedelta(months=1) for data in todas_datas]
+if st.checkbox('ver o gráfico'):
+    figura = go.Figure()
+    
+
+    h_v = st.radio('exibir dataframe da media mensal de rentabilidade acumulada por setor',['NÃO EXIBIR','HORIZONTAL', 'VERTICAL'], horizontal=True)
+    if h_v == 'NÃO EXIBIR':
+        pass
+    if h_v == 'VERTICAL':
+        st.dataframe(df.groupby('SEGMENTO')[['ACUM_RENTABILIDADE']].mean())
+    if h_v == 'HORIZONTAL':
+        st.dataframe(df.groupby('SEGMENTO')[['ACUM_RENTABILIDADE']].mean().T)
+
+    for setor in todos_setores_econ.values:
+        figura.add_trace(go.Scatter(
+            x=data_1_antes, 
+            y=df_perform_setores[setor].fillna(0).values * 100,
+            name=setor,mode='lines+markers', text=setor, hoverinfo='text+y'
+        ))
+
+    figura.update_layout(shapes=[
+                dict(
+                    type='line',
+                    xref='paper',
+                    x0=1,
+                    x1=0,
+                    yref='y',
+                    y0=0,
+                    y1=0,
+                    line=dict(color='black', width=2)
+                )
+            ])
+    # figura.update_layout(title='Média dos retornos mensais ACUMULADOS')
+    figura.update_layout(xaxis_title='DATAS', yaxis_title='RENTABILIDADE (%)')
+    figura.update_layout(title='RENTABILIDADE ACUMULADA MÊS A MÊS POR SEGMENTO')
+    figura.update_layout(width=1100, height=600)
+
+    st.plotly_chart(figura)
+
+
+
+
+
+st.divider()
+###############################################################################################################################################
+st.header('RETORNOS MENSAIS POR SEGMENTO',divider='rainbow')
+
+df_perform_setores = df.groupby(['SEGMENTO','DATA'])['RETORNOS_SIMPLES'].mean()
+todos_setores_econ = df_perform_setores.index.get_level_values('SEGMENTO').unique()
+todas_datas = df_perform_setores.index.get_level_values('DATA').unique()
+from dateutil.relativedelta import relativedelta
+import datetime
+data_1_antes = [data - relativedelta(months=1) for data in todas_datas]
+
+figura = go.Figure()
+st.subheader(f"MÉDIA DE RETORNO POR MÊS =  {df['RETORNOS_SIMPLES'].mean() * 100:.4f} %")
+st.caption('conferir essa media depois ^^^^^^')
+st.caption('''Desempenho Relativo dos Setores: Compare os retornos mensais entre diferentes setores econômicos. 
+           Identifique setores que consistentemente superam ou ficam aquém do desempenho geral do mercado. 
+           Isso pode indicar áreas de oportunidade ou de risco.''')
+st.caption('''Sazonalidades e Padrões de Desempenho: Observe se existem padrões sazonais nos retornos mensais de determinados setores. 
+           Alguns setores podem ser mais sensíveis a fatores sazonais, eventos sazonais ou mudanças climáticas.''')
+st.caption('''Correlações com Indicadores Macroeconômicos: Analise se os retornos mensais têm correlação com indicadores econômicos, como taxas de juros, 
+           produção industrial, emprego ou outros fatores macroeconômicos. 
+           Isso pode ajudar a entender as influências externas nos setores.''')
+st.caption('''Identificação de Outliers: Procure por meses em que um setor específico teve um desempenho significativamente melhor ou pior do que o esperado. 
+           Isso pode indicar eventos específicos que impactaram esse setor.''')
+st.caption('''Análise de Consistência: Avalie a consistência dos retornos ao longo do tempo para cada setor. 
+           Setores que mantêm um desempenho estável podem ser considerados mais previsíveis.''')
+if st.checkbox(' ver   gráfico    '):
+    h_v = st.radio('exibir dataframe da média dos retornos mensais por setor ',['NÃO EXIBIR','HORIZONTAL', 'VERTICAL'], horizontal=True)
+    if h_v == 'NÃO EXIBIR':
+        pass
+    if h_v == 'VERTICAL':
+        st.dataframe(df.groupby('SEGMENTO')[['RETORNOS_SIMPLES']].mean() * 100)
+    if h_v == 'HORIZONTAL':
+        st.dataframe((df.groupby('SEGMENTO')[['RETORNOS_SIMPLES']].mean() * 100).T)
+
+    for setor in todos_setores_econ.values:
+        figura.add_trace(go.Scatter(
+            x=data_1_antes, 
+            y=df_perform_setores[setor].fillna(0).values * 100,
+            name=setor,mode='lines+markers', text=setor, hoverinfo='text+y'
+        ))
+
+    figura.update_layout(shapes=[
+                dict(
+                    type='line',
+                    xref='paper',
+                    x0=1,
+                    x1=0,
+                    yref='y',
+                    y0=0,
+                    y1=0,
+                    line=dict(color='black', width=2)
+                )
+            ])
+    # figura.update_layout(title='Média dos retornos mensais ACUMULADOS')
+    figura.update_layout(xaxis_title='DATAS', yaxis_title='Retorno Mensal (%)')
+    figura.update_layout(title='Retornos mensais (%) por SEGMENTO')
+    figura.update_layout(width=1100, height=600)
+
+    st.plotly_chart(figura)
+
+
+
+
+
+st.divider()
+########################################################################################################################################
+st.header('ANÁLISE DA VOLATILIDADE MÉDIA POR SETOR',divider='rainbow')
+st.subheader(f"VOLATILIDADE MÉDIA GERAL =  {df['VOLATILIDADE'].mean() * 100:.4f} %")
+st.caption('''Comparação de Estabilidade Setorial: Ao observar a volatilidade média, você pode identificar setores que 
+           historicamente apresentam maior estabilidade e menor flutuação nos preços das ações. 
+           Isso pode indicar setores mais resilientes a choques externos.''')
+st.caption('''Correlação com Eventos Econômicos: Se houver setores que mostram picos de volatilidade em momentos específicos, 
+           isso pode estar relacionado a eventos econômicos, políticos ou globais. 
+           Analise esses picos para entender as correlações com eventos externos.  OBSERVAR O DROWDOWN/PERGA OU GANHO BRUTO MENSAL PARA MAIS DETALHES''')
+st.caption('''''')
+df_graf = df.groupby('SEGMENTO')['VOLATILIDADE'].mean() * 100
+df_graf = df_graf.sort_values(ascending=False)
+
+if st.checkbox(' ver   gráfico '):
+
+    h_v = st.radio(' exibir tabela VOLATILIDADE média por setor   ',['NÃO EXIBIR','HORIZONTAL', 'VERTICAL'], horizontal=True)
+    if h_v == 'NÃO EXIBIR':
+        pass
+    if h_v == 'VERTICAL':
+        st.dataframe(df.groupby('SEGMENTO')[['VOLATILIDADE']].mean())
+    if h_v == 'HORIZONTAL':
+        st.dataframe(df.groupby('SEGMENTO')[['VOLATILIDADE']].mean().T)
+
+    figura = go.Figure(go.Bar(
+        x=df_graf.index.values,
+        y=df_graf.values,
+        text=df_graf.values,  # Adicione isso se desejar que os valores apareçam nas barras
+        hoverinfo='x+y',  # Isso mostra as informações de setor econômico e volatilidade ao passar o mouse
+    ))
+    figura.update_layout(shapes=[
+        dict(
+            type='line',
+            xref='paper',
+            x0=1,
+            x1=0,
+            yref='y',
+            y0=0,
+            y1=0,
+            line=dict(color='black', width=2)
+        )
+    ])
+    figura.update_layout(
+        title='Volatilidade por Segmento',
+        xaxis_title='Segmento',
+        yaxis_title='Volatilidade (%)',
+        width=1000,
+        height=600,
+    )
+    st.plotly_chart(figura)
+
+st.divider()
+####################################################################################################################################
+st.header('ANÁLISE DO GANHO/PERDA BRUTO (R$)',divider='rainbow')
+st.subheader(f"PERDA/GANHO BRUTO MÉDIO GERAL =  {df['GANHO BRUTO R$'].mean():.4f} R$")
+st.caption('''Desempenho Relativo dos Setores: Compare o ganho bruto acumulado entre diferentes setores ao longo do tempo.
+            Identifique setores que apresentam um crescimento mais consistente em termos de ganho bruto.''')
+st.caption('''Análise de Riscos: Avalie a volatilidade nos ganhos brutos acumulados para entender a 
+           exposição ao risco em diferentes setores.
+            Identifique os meses ou períodos de maior volatilidade e investigue as causas.''')
+st.caption('''Eventos Econômicos e Impacto nos Setores:Relacione eventos econômicos significativos com as 
+           mudanças nos ganhos brutos acumulados.
+            Analise como eventos como crises econômicas, pandemias ou mudanças nas políticas afetam diferentes setores.''')
+st.caption('''Identificação de Tendências: Observe se há tendências crescentes, decrescentes ou estáveis nos ganhos brutos acumulados para cada setor.
+Analise se há padrões sazonais ou eventos específicos que afetam diferentes setores.''')
+df_perform_setores = df.groupby(['SEGMENTO','DATA'])['ACUM_GANHO BRUTO R$'].mean()
+todos_setores_econ = df_perform_setores.index.get_level_values('SEGMENTO').unique()
+todas_datas = df_perform_setores.index.get_level_values('DATA').unique()
+from dateutil.relativedelta import relativedelta
+import datetime
+data_1_antes = [data - relativedelta(months=1) for data in todas_datas]
+
+if st.checkbox(' ver gráfico'):
+    figura = go.Figure()
+
+
+    h_v = st.radio('exibir tabela da média (mensal) de ganho bruto por setor  ',['NÃO EXIBIR','HORIZONTAL', 'VERTICAL'], horizontal=True)
+    if h_v == 'NÃO EXIBIR':
+        pass
+    if h_v == 'VERTICAL':
+        st.dataframe(df.groupby('SEGMENTO')[['ACUM_GANHO BRUTO R$']].mean())
+    if h_v == 'HORIZONTAL':
+        st.dataframe(df.groupby('SEGMENTO')[['ACUM_GANHO BRUTO R$']].mean().T)
+
+    for setor in todos_setores_econ.values:
+        figura.add_trace(go.Scatter(
+            x=data_1_antes, 
+            y=df_perform_setores[setor].fillna(0).values ,
+            name=setor,mode='lines+markers', text=setor, hoverinfo='text+y'
+        ))
+
+    figura.update_layout(shapes=[
+                dict(
+                    type='line',
+                    xref='paper',
+                    x0=1,
+                    x1=0,
+                    yref='y',
+                    y0=0,
+                    y1=0,
+                    line=dict(color='black', width=2)
+                )
+            ])
+    # figura.update_layout(title='Média dos retornos mensais ACUMULADOS')
+    figura.update_layout(xaxis_title='Período', yaxis_title='GANHO BRUTO ACUMULADO (R$)')
+    figura.update_layout(title='Ganho bruto acumulado ao longo dos meses por SEGMENTO')
+    figura.update_layout(width=1100, height=600)
+
+    st.plotly_chart(figura)
+
+##################################################################################################################################
+
+
+
+st.header('ANÁLISE DO DROW DOWN (%) MÉDIO',divider='rainbow')
+st.subheader(f"DROW DOWN MÉDIO GERAL =  {df['DROW_DOWN'].mean() * 100:.4f} %")
+
+
+df_perform_setores = df.groupby(['SEGMENTO','DATA'])['DROW_DOWN'].mean()
+todos_setores_econ = df_perform_setores.index.get_level_values('SEGMENTO').unique()
+todas_datas = df_perform_setores.index.get_level_values('DATA').unique()
+from dateutil.relativedelta import relativedelta
+import datetime
+data_1_antes = [data - relativedelta(months=1) for data in todas_datas]
+st.caption('''Resiliência do Setor: Um Drawdown Médio baixo pode indicar uma resiliência relativamente alta do setor, pois os valores negativos médios são menores. Isso sugere que, em média, as ações do setor têm experimentado quedas menores em comparação com os picos anteriores.
+
+Volatilidade: O Drawdown Médio é uma medida da volatilidade do setor. Quanto maior o Drawdown Médio, maior a volatilidade. Isso pode influenciar as decisões de investimento, especialmente se você estiver buscando setores com menor volatilidade.
+
+Eventos Econômicos: Picos de Drawdown podem estar associados a eventos econômicos significativos, como crises financeiras ou mudanças nas condições do mercado. Analisar os períodos de drawdown pode fornecer insights sobre os eventos que impactaram o setor.''')
+if st.checkbox('ver gráfico   '):
+    figura = go.Figure()
+
+    h_v = st.radio('exibir tabela Drow Down médio mensal por setor',['NÃO EXIBIR','HORIZONTAL', 'VERTICAL'], horizontal=True)
+    if h_v == 'NÃO EXIBIR':
+        pass
+    if h_v == 'VERTICAL':
+        st.dataframe(df.groupby('SEGMENTO')[['DROW_DOWN']].mean())
+    if h_v == 'HORIZONTAL':
+        st.dataframe(df.groupby('SEGMENTO')[['DROW_DOWN']].mean().T)
+
+    for setor in todos_setores_econ.values:
+        figura.add_trace(go.Scatter(
+            x=data_1_antes, 
+            y=df_perform_setores[setor].fillna(0).values * 100,
+            name=setor,mode='lines+markers', text=setor, hoverinfo='text+y'
+        ))
+
+    figura.update_layout(shapes=[
+                dict(
+                    type='line',
+                    xref='paper',
+                    x0=1,
+                    x1=0,
+                    yref='y',
+                    y0=0,
+                    y1=0,
+                    line=dict(color='black', width=2)
+                )
+            ])
+    # figura.update_layout(title='Média dos retornos mensais ACUMULADOS')
+    figura.update_layout(xaxis_title='Período', yaxis_title='DROW DOWN (%)')
+    figura.update_layout(title='Drow down médio mensal por segmento')
+    figura.update_layout(width=1100, height=600)
+
+    st.plotly_chart(figura)
+
+####################################################################################################################################
+
+st.header('ANÁLISE DO DROW DOWN MÁXIMO (%)',divider='rainbow')
+st.subheader(f"DROW DOWN MÁXIMO MÉDIO =  {df['MÁXIMO DROW DOWN'].mean() * 100:.4f} %")
+st.caption('''Risco Máximo: O Drawdown Máximo fornece uma medida do risco máximo 
+           enfrentado por um setor em termos de redução do valor. É a maior queda percentual em relação ao pico anterior, 
+           representando o risco mais extremo experimentado pelo setor durante o período analisado.''')
+st.caption('''Comparação com o Mercado: Comparar o Drawdown Máximo de um setor com o do mercado em geral 
+           (índices de referência) pode ajudar a determinar se o setor é mais ou menos volátil do que o mercado em determinados momentos.''')
+
+if st.checkbox('ver gráfico'):
+
+    h_v = st.radio(' exibir tabela do máximo drow down por setor   ',['NÃO EXIBIR','HORIZONTAL', 'VERTICAL'], horizontal=True)
+    if h_v == 'NÃO EXIBIR':
+        pass
+    if h_v == 'VERTICAL':
+        st.dataframe(df.groupby('SEGMENTO')[['MÁXIMO DROW DOWN']].mean() * 100)
+    if h_v == 'HORIZONTAL':
+        st.dataframe((df.groupby('SEGMENTO')[['MÁXIMO DROW DOWN']].mean() * 100).T)
+
+    df_graf = df.groupby('SEGMENTO')['MÁXIMO DROW DOWN'].mean() * 100
+    df_graf = df_graf.sort_values(ascending=True)
+    figura = go.Figure(go.Bar(
+        x=df_graf.index.values,
+        y=df_graf.values,
+        text=df_graf.values,  # Adicione isso se desejar que os valores apareçam nas barras
+        hoverinfo='x+y',  # Isso mostra as informações de setor econômico e volatilidade ao passar o mouse
+    ))
+    figura.update_layout(shapes=[
+        dict(
+            type='line',
+            xref='paper',
+            x0=1,
+            x1=0,
+            yref='y',
+            y0=0,
+            y1=0,
+            line=dict(color='black', width=2)
+        )
+    ])
+    figura.update_layout(
+        title='Drow down máximo por segmento',
+        xaxis_title='Segmento',
+        yaxis_title='DROW DOWN (%)',
+        width=1000,
+        height=600,
+    )
+    
+    st.plotly_chart(figura)
+
+st.divider()
+
+####################################################################################################################################
+st.header('ANÁLISE DA MÉDIA DOS PREÇOS DAS AÇÕES ',divider='rainbow')
+st.subheader(f"PREÇO MÉDIO GERAL =  {df['PREÇO (R$)'].mean():.2f} R$")
+st.caption('''Análise Setorial ou Comparativa: Comparar a média dos preços de um ativo com a média de outros ativos
+            do mesmo setor ou com índices de referência pode ajudar a contextualizar o desempenho relativo.''')
+
+st.caption('''Tendência de Longo Prazo: A média dos preços ao longo de períodos mais longos pode ajudar
+             a identificar a tendência geral das ações. Uma média móvel de longo prazo suaviza flutuações de curto prazo
+             e destaca a direção principal do movimento dos preços.''')
+st.caption('''Análise de Regressão (Opcional):
+
+Se desejar uma análise mais aprofundada, pode-se realizar uma análise de regressão para entender
+            a relação entre a média dos preços e variáveis independentes, 
+           como indicadores econômicos ou de desempenho setorial.''')
+
+
+df_perform_setores = df.groupby(['SEGMENTO','DATA'])['PREÇO (R$)'].mean()
+todos_setores_econ = df_perform_setores.index.get_level_values('SEGMENTO').unique()
+todas_datas = df_perform_setores.index.get_level_values('DATA').unique()
+from dateutil.relativedelta import relativedelta
+import datetime
+data_1_antes = [data - relativedelta(months=1) for data in todas_datas]
+
+if st.checkbox('ver grafico '):
+    figura = go.Figure()
+
+    h_v = st.radio('exibir tabela do preço médio mensal das ações  do setor    ',['NÃO EXIBIR','HORIZONTAL', 'VERTICAL'], horizontal=True)
+    if h_v == 'NÃO EXIBIR':
+        pass
+    if h_v == 'VERTICAL':
+        st.dataframe(df.groupby('SEGMENTO')[['MÉDIA']].mean())
+    if h_v == 'HORIZONTAL':
+        st.dataframe(df.groupby('SEGMENTO')[['MÉDIA']].mean().T)
+
+    for setor in todos_setores_econ.values:
+        figura.add_trace(go.Scatter(
+            x=data_1_antes, 
+            y=df_perform_setores[setor].fillna(0).values,
+            name=setor,mode='lines+markers', text=setor, hoverinfo='text+y'
+        ))
+
+    figura.update_layout(shapes=[
+                dict(
+                    type='line',
+                    xref='paper',
+                    x0=1,
+                    x1=0,
+                    yref='y',
+                    y0=0,
+                    y1=0,
+                    line=dict(color='white', width=2)
+                )
+            ])
+    # figura.update_layout(title='Média dos retornos mensais ACUMULADOS')
+    figura.update_layout(xaxis_title='Periodo', yaxis_title='Preço R$')
+    figura.update_layout(title='Preço médio mensal das ações por SEGMENTO')
+    figura.update_layout(width=1100, height=600)
+
+    st.plotly_chart(figura)
