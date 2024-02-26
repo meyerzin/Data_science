@@ -28,15 +28,11 @@ df_precos_pivotada = df_precos.pivot_table(index='DATA', columns='PAPEL', values
 
 st.title('\t\t:rainbow[UNA INVESTMENT - DATA SCIENCE]')
 st.markdown("# Visualização geral dos dados")
-st.header('',divider='rainbow')   
-
+st.header('',divider='rainbow')
+st.subheader('Estatísticas individual')
 rank = st.slider('Selecione o TOP da informação que deseja ver', min_value = 1, 
                                                             max_value = len(df['PAPEL'].unique()),
-                                                            value=1)
-st.caption('EXEMPLO : [1] --> Melhor rentabilidade, ganho bruto, sharp ratio, drow down e perda bruta')
-st.caption('EXEMPLO : [2] --> Segunda melhor rentabilidade, ganho bruto, sharp ratio, drow down e perda bruta')
-
-                                                                                                          # .sort_values(ascending=False).values[rank * 6]
+                                                            value=1)                                                                                                          # .sort_values(ascending=False).values[rank * 6]
 ##########################################################
 mostrar_filtro_coluna = st.sidebar.checkbox("Filtrar informacoes")
 if mostrar_filtro_coluna:         
@@ -74,6 +70,30 @@ with col5:
             delta=f"{df.loc[df['MÁXIMO DROW DOWN bruto'] == df['MÁXIMO DROW DOWN bruto'].sort_values(ascending=True).values[(rank - 1)* 6], 'MÁXIMO DROW DOWN'].values[0] * 100:.2f} % rentabilidade")
 
 st.caption('INFORMAÇÕES DE VARIAÇÃO SÃO RELATIVAS A PRÓPRIA AÇÃO OBSERVADA')
+
+st.subheader(F'Estatísticas TOTAIS das {len(df.PAPEL.unique())} ações')
+col1, col2, col3, col4 = st.columns(4)
+with col1:
+    maior_rentabilidade = st.metric(label=f" VARIAÇÃO(%) NO PREÇO TOTAL EM 6 MESES", 
+                value=f"{(df.groupby('DATA')['PREÇO (R$)'].sum().iloc[-1] / df.groupby('DATA')['PREÇO (R$)'].sum().iloc[0] - 1) * 100:.3f} %", 
+                delta=f"")
+
+with col2:
+    maior_rentabilidade = st.metric(label=f" VARAIÇÃO(R$) NO PREÇO TOTAL 6 MESES", 
+                value=f"{(df.groupby('DATA')['PREÇO (R$)'].sum().iloc[-1] - df.groupby('DATA')['PREÇO (R$)'].sum().iloc[0]):.3f} R$", 
+                delta=f"")
+    
+with col3:
+    maior_rentabilidade = st.metric(label=f"VOLATILIDADE MÉDIA NO PERÍODO", 
+            value= f"{df.VOLATILIDADE.mean() * 100:.3f} %",
+            delta=f"")
+
+with col4:
+    maior_dd = st.metric(label=f"RENTABILIDADE MÉDIA NO PERÍODO",
+            value= f"{df.RENTABILIDADE.mean() * 100:.3f} %",
+            delta=f"")
+
+
 st.divider()
 st.subheader('DATAFRAMES', divider='rainbow')
 st.caption('selecionar na direita informações que quer observar ou ver tudo.')
